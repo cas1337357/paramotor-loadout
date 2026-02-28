@@ -8,9 +8,9 @@ export default function App() {
   const [fuelLiters, setFuelLiters] = useState(5);
   const [menu, setMenu] = useState(null); 
 
-  // Starting loadout with your verified equipment
+  // Initial loadout uses your verified Polini Thor 202 and DriftAir 2
   const [loadout, setLoadout] = useState({
-    engine: GEAR_DATA.engines[0], // Polini Thor 202
+    engine: GEAR_DATA.engines[0],
     frame: GEAR_DATA.frames[0],
     glider: { ...GEAR_DATA.manufacturers.Dudek.models["DriftAir 2"][2], brand: 'Dudek', model: 'DriftAir 2' },
     reserve: GEAR_DATA.reserves[0],
@@ -91,12 +91,22 @@ export default function App() {
                   <p className="hero-weight-number">{convert(stats.total).toFixed(1)}</p>
                   <p className="text-5xl text-zinc-500 uppercase font-bold tracking-widest ml-4">{unitL}</p>
                 </div>
-                {stats.warning && <div className="safety-alert-box"><p className="safety-alert-text">{stats.warning}</p></div>}
+                {stats.warning && (
+                  <div className="safety-alert-box animate-pulse bg-red-900/80 border-4 border-red-500 px-8 py-4 mt-4">
+                    <p className="text-white font-black text-2xl uppercase tracking-tighter italic">{stats.warning}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           <div className="command-center space-y-10">
+              {/* KG/LBS Toggle moved inside Command Center */}
+              <div className="flex bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden mb-8">
+                <button onClick={() => setUnit('kg')} className={`flex-1 py-3 text-xl font-bold transition-all ${unit === 'kg' ? 'bg-purple-600 text-white shadow-lg' : 'text-zinc-600'}`}>KILOGRAMS</button>
+                <button onClick={() => setUnit('lbs')} className={`flex-1 py-3 text-xl font-bold transition-all ${unit === 'lbs' ? 'bg-purple-600 text-white shadow-lg' : 'text-zinc-600'}`}>POUNDS</button>
+              </div>
+
               <div>
                 <div className="flex justify-between uppercase tracking-widest mb-4">
                   <span className="text-zinc-400 font-bold">Fuel Reserve</span>
@@ -124,10 +134,6 @@ export default function App() {
 
       <div className="attribute-box space-y-10">
         <div className="flex justify-between items-center border-b border-zinc-800 pb-8">
-           <div className="flex bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden">
-              <button onClick={() => setUnit('kg')} className={`px-10 py-3 text-2xl font-bold transition-all ${unit === 'kg' ? 'bg-purple-600 text-white' : 'text-zinc-600'}`}>KG</button>
-              <button onClick={() => setUnit('lbs')} className={`px-10 py-3 text-2xl font-bold transition-all ${unit === 'lbs' ? 'bg-purple-600 text-white' : 'text-zinc-600'}`}>LBS</button>
-           </div>
            <div className={`px-12 py-6 border-4 font-bold text-4xl tracking-widest rounded-xl ${stats.total <= 115.2 ? 'border-green-600 text-green-500' : 'border-red-600 text-red-500 animate-pulse'}`}>
               {stats.total <= 115.2 ? '✓ PART 103' : '⚠ EXPERIMENTAL'}
            </div>
