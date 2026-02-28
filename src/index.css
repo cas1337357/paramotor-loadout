@@ -107,62 +107,74 @@ input[type=range].rpg-slider::-webkit-slider-thumb {
   border: 3px solid #000; cursor: pointer; margin-top: -15px;
 }
 /* MOBILE FLANKING REPAIR */
+/* MOBILE VIEWPORT LOCK */
 @media (max-width: 1024px) {
-  .character-screen {
-    display: flex;
-    flex-direction: column; /* Stack the rows vertically */
+  .app-viewport {
     width: 100vw;
-    align-items: center;
-    gap: 0;
+    padding: 10px 0;
+    overflow-x: hidden;
   }
 
-  /* TOP GEAR SHELF (Left Column items) */
+  /* FLANKING GRID: FORCES ICONS TO LEFT/RIGHT EDGES */
+  .character-screen {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Split screen in half */
+    grid-template-areas: 
+      "left-icons right-icons"
+      "pilot pilot"; /* Pilot sits below the header-style icons */
+    width: 100%;
+    gap: 10px;
+    padding: 0 10px;
+  }
+
+  /* LEFT GEAR COLUMN */
   .character-screen > div:first-child {
-    order: 1; /* Move to the top */
-    flex-direction: row;
+    grid-area: left-icons;
+    display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    width: 100%;
-    padding: 20px 0;
+    justify-content: flex-start;
     gap: 10px;
   }
 
-  /* PILOT MODEL AREA */
-  .character-screen > div:nth-child(2) {
-    order: 2; /* Keep Pilot in middle */
-    min-height: 600px;
-    width: 100%;
-  }
-
-  /* BOTTOM GEAR SHELF (Right Column items) */
+  /* RIGHT GEAR COLUMN */
   .character-screen > div:last-child {
-    order: 3; /* Move to the bottom */
-    flex-direction: row;
+    grid-area: right-icons;
+    display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    width: 100%;
-    padding: 20px 0;
+    justify-content: flex-end;
     gap: 10px;
   }
 
-  /* SCALED DOWN GEAR SOCKETS FOR FITTING */
+  /* PILOT MODEL ANCHOR */
+  .character-screen > div:nth-child(2) {
+    grid-area: pilot;
+    min-height: 450px;
+    margin-top: -50px; /* Pulls model up under icons */
+    z-index: 1;
+  }
+
+  /* SIZE SCALING FOR ACCESSIBILITY */
   .gear-socket {
-    width: 160px; /* Slightly larger for better readability */
-    height: 160px;
-    margin: 5px;
+    width: calc(50vw - 25px); /* Perfectly fills half the screen minus gap */
+    max-width: 160px;
+    height: 140px;
+    border-width: 2px;
   }
 
-  .socket-label { font-size: 14px; margin-bottom: 8px; }
-  .gear-socket span:last-child { font-size: 22px; }
+  .socket-label { font-size: 11px; letter-spacing: 2px; }
+  .gear-socket span:last-child { font-size: 16px; }
 
-  /* HERO WEIGHT ADJUSTMENT */
-  .hero-weight-number { font-size: 120px; }
-  .hero-data-anchor { top: 45%; }
+  /* HERO WEIGHT OVER MODEL */
+  .hero-weight-number { font-size: 90px; }
+  .hero-data-anchor { top: 40%; transform: translate(-50%, -50%) scale(0.8); }
 
-  /* PEDESTAL & COMMAND CENTER */
-  .attribute-box, .command-center {
-    width: 98% !important;
-    padding: 40px 20px;
-    margin-top: 10px;
+  /* COMMAND CENTER & PEDESTAL */
+  .command-center, .attribute-box {
+    width: 96% !important;
+    padding: 20px;
+    margin: 10px auto;
   }
+
+  .attr-value-huge { font-size: 55px; }
+  .attr-label-huge { font-size: 18px; letter-spacing: 2px; }
 }
