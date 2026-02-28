@@ -106,3 +106,60 @@ input[type=range].rpg-slider::-webkit-slider-thumb {
   background: radial-gradient(circle, #ffd700 0%, #8b6508 100%);
   border: 3px solid #000; cursor: pointer; margin-top: -15px;
 }
+/* MOBILE RESPONSIVENESS */
+@media (max-width: 1024px) {
+  .app-viewport {
+    padding: 10px;
+    max-width: 100vw;
+  }
+
+  /* Stack the 3-column grid into a single column */
+  .character-screen {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 20px;
+  }
+
+  /* Wrap the gear sockets so they don't go off-screen */
+  .character-screen > div:first-child, 
+  .character-screen > div:last-child {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0;
+    width: 100%;
+    gap: 15px;
+  }
+
+  /* Shrink the sockets for small screens */
+  .gear-socket {
+    width: 140px;
+    height: 140px;
+  }
+  .socket-label { font-size: 12px; letter-spacing: 2px; }
+  .gear-socket span:last-child { font-size: 18px; }
+
+  /* Adjust the Pilot Image and Hero Data */
+  img[alt="Pilot"] {
+    height: 500px;
+  }
+  .hero-weight-number {
+    font-size: 100px;
+  }
+
+  /* Shrink the Command Center and Pedestal */
+  .command-center, .attribute-box {
+    width: 95% !important;
+    padding: 30px 20px;
+  }
+
+  .attr-value-huge { font-size: 60px; }
+  .attr-label-huge { font-size: 20px; letter-spacing: 3px; }
+
+  /* Ensure side drawer fills more of the screen on mobile */
+  .side-drawer {
+    width: 90%;
+    right: -100%;
+  }
+}
