@@ -6,9 +6,9 @@ export default function App() {
   const [unit, setUnit] = useState('kg');
   const [pilotWeight, setPilotWeight] = useState(85);
   const [fuelLiters, setFuelLiters] = useState(5);
-  const [menu, setMenu] = useState(null); // Structure: { type, step, mfr, model }
+  const [menu, setMenu] = useState(null); 
 
-  // Initial loadout uses your verified Polini Thor 202 and DriftAir 2
+  // Default loadout: Polini Thor 202 (WC) and DriftAir 2
   const [loadout, setLoadout] = useState({
     engine: GEAR_DATA.engines[0],
     frame: GEAR_DATA.frames[0],
@@ -22,20 +22,11 @@ export default function App() {
   const unitL = unit === 'kg' ? 'kg' : 'lbs';
 
   const stats = useMemo(() => {
-    const gearBase = (loadout.engine?.weight || 0) + 
-                     (loadout.frame?.weight || 0) + 
-                     (loadout.glider?.weight || 0) + 
-                     (loadout.accessory?.weight || 0) + 
-                     (loadout.reserve?.weight || 0);
-    
-    const std = (loadout.helmet ? GEAR_DATA.standardWeights.helmet : 0) + 
-                (loadout.gloves ? GEAR_DATA.standardWeights.gloves : 0) + 
-                (loadout.boots ? GEAR_DATA.standardWeights.boots : 0);
-    
+    const gearBase = (loadout.engine?.weight || 0) + (loadout.frame?.weight || 0) + (loadout.glider?.weight || 0) + (loadout.accessory?.weight || 0) + (loadout.reserve?.weight || 0);
+    const std = (loadout.helmet ? GEAR_DATA.standardWeights.helmet : 0) + (loadout.gloves ? GEAR_DATA.standardWeights.gloves : 0) + (loadout.boots ? GEAR_DATA.standardWeights.boots : 0);
     const total = gearBase + std + pilotWeight + (fuelLiters * 0.748);
     const loading = total / (loadout.glider?.area || 1);
     
-    // Safety thresholds for wing loading
     let warning = null;
     if (loading > 6.8) warning = "CRITICAL: OVERLOADED";
     else if (loading > 6.2) warning = "WARNING: HIGH LOADING";
@@ -46,34 +37,27 @@ export default function App() {
 
   return (
     <div className="app-viewport">
-      {/* SIDE DRAWER: SELECTION MENU */}
+      {/* SIDE DRAWER */}
       <div className={`side-drawer ${menu ? 'open' : ''}`}>
         <div className="flex justify-between items-center mb-16 border-b-4 border-amber-900 pb-8">
            <h3 className="text-rpg-gold font-medieval text-5xl uppercase italic tracking-tighter">Equip {menu?.type}</h3>
            <button onClick={() => setMenu(null)} className="text-slate-500 hover:text-white font-black text-3xl">CLOSE [X]</button>
         </div>
-        
         <div className="pr-4 h-[80vh] overflow-y-auto custom-scrollbar">
-          {/* Engine List */}
           {menu?.type === 'engine' && GEAR_DATA.engines.map(e => (
             <div key={e.id} onClick={() => {setLoadout({...loadout, engine: e}); setMenu(null)}} className="loot-card">
               <p className="text-amber-500 font-black uppercase text-sm mb-1">{e.brand}</p>
               <p className="text-4xl font-black text-white">{e.model}</p>
             </div>
           ))}
-
-          {/* Reserve List */}
           {menu?.type === 'reserve' && GEAR_DATA.reserves.map(r => (
             <div key={r.id} onClick={() => {setLoadout({...loadout, reserve: r}); setMenu(null)}} className="loot-card">
               <p className="text-purple-500 font-black uppercase text-sm mb-1">{r.brand}</p>
               <p className="text-4xl font-black text-white">{r.model}</p>
-              <p className="text-xs text-slate-500">{r.type} - {r.weight}kg</p>
             </div>
           ))}
-
-          {/* Hierarchical Wing Selection */}
           {menu?.type === 'wing' && menu.step === 'mfr' && Object.keys(GEAR_DATA.manufacturers).map(m => (
-            <div key={m} onClick={() => setMenu({type: 'wing', step: 'model', mfr: m})} className="loot-card text-rpg-gold font-black text-4xl uppercase tracking-widest">{m}</div>
+            <div key={m} onClick={() => setMenu({type: 'wing', step: 'model', mfr: m})} className="loot-card text-rpg-gold font-black text-4xl uppercase">{m}</div>
           ))}
           {menu?.type === 'wing' && menu.step === 'model' && Object.keys(GEAR_DATA.manufacturers[menu.mfr].models).map(mod => (
             <div key={mod} onClick={() => setMenu({type: 'wing', step: 'size', mfr: menu.mfr, model: mod})} className="loot-card text-white font-black text-3xl uppercase">{mod}</div>
@@ -81,33 +65,28 @@ export default function App() {
           {menu?.type === 'wing' && menu.step === 'size' && GEAR_DATA.manufacturers[menu.mfr].models[menu.model].map(s => (
             <div key={s.size} onClick={() => {setLoadout({...loadout, glider: {...s, brand: menu.mfr, model: menu.model}}); setMenu(null)}} className="loot-card text-green-400 font-black text-6xl">{s.size}m</div>
           ))}
-
-          {/* Frame List */}
-          {menu?.type === 'frame' && GEAR_DATA.frames.map(f => (
-            <div key={f.id} onClick={() => {setLoadout({...loadout, frame: f}); setMenu(null)}} className="loot-card text-white font-black text-3xl uppercase">{f.model}</div>
-          ))}
-
-          {/* Accessory List */}
           {menu?.type === 'accessory' && GEAR_DATA.accessories.map(acc => (
             <div key={acc.id} onClick={() => {setLoadout({...loadout, accessory: acc}); setMenu(null)}} className="loot-card text-white font-black text-3xl">{acc.name}</div>
+          ))}
+          {menu?.type === 'frame' && GEAR_DATA.frames.map(f => (
+            <div key={f.id} onClick={() => {setLoadout({...loadout, frame: f}); setMenu(null)}} className="loot-card text-white font-black text-3xl uppercase">{f.model}</div>
           ))}
         </div>
       </div>
 
       <div className="character-screen">
-        {/* LEFT COLUMN: PERIMETER SOCKETS */}
-        <div className="flex flex-col gap-12 justify-center items-start pl-12">
+        {/* LEFT COLUMN */}
+        <div className="gear-column-left">
           <Socket label="HEAD" active={loadout.helmet} sub="Helmet" onClick={() => setLoadout({...loadout, helmet: !loadout.helmet})} />
           <Socket label="WING" active={true} sub={`${loadout.glider.model}`} onClick={() => setMenu({type: 'wing', step: 'mfr'})} />
           <Socket label="RESERVE" active={true} sub={loadout.reserve.model} onClick={() => setMenu({type: 'reserve'})} />
           <Socket label="MISC" active={!!loadout.accessory} sub={loadout.accessory?.name || "EMPTY"} onClick={() => setMenu({type: 'accessory'})} />
         </div>
 
-        {/* CENTER COLUMN: HERO AREA */}
-        <div className="flex flex-col items-center">
+        {/* CENTER COLUMN */}
+        <div className="hero-column">
           <div className="relative flex justify-center items-center min-h-[900px] w-full">
             <img src={pilotImage} alt="Pilot" className={`h-[850px] w-auto transition-all ${menu ? 'opacity-10 blur-3xl' : 'opacity-90'}`} />
-            
             {!menu && (
               <div className="hero-data-anchor">
                 <div className="flex items-baseline justify-center">
@@ -119,27 +98,24 @@ export default function App() {
             )}
           </div>
 
-          {/* COMMAND CENTER: SLIDERS */}
           <div className="command-center space-y-12">
               <div>
                 <div className="flex justify-between uppercase tracking-widest mb-4">
-                  <span>Fuel Reserve</span>
-                  <span className="text-amber-500 italic">{fuelLiters}L</span>
+                  <span>Fuel Reserve</span><span className="text-amber-500 italic">{fuelLiters}L</span>
                 </div>
                 <input type="range" min="0" max="15" step="1" value={fuelLiters} onChange={(e) => setFuelLiters(Number(e.target.value))} className="rpg-slider" />
               </div>
               <div>
                 <div className="flex justify-between uppercase tracking-widest mb-4">
-                  <span>Pilot Mass ({unitL})</span>
-                  <span className="text-amber-500 italic">{convert(pilotWeight).toFixed(1)}</span>
+                  <span>Pilot Mass ({unitL})</span><span className="text-amber-500 italic">{convert(pilotWeight).toFixed(1)}</span>
                 </div>
                 <input type="range" min="0" max={unit === 'kg' ? 300 : 660} step="1" value={convert(pilotWeight)} onChange={(e) => setPilotWeight(unit === 'kg' ? Number(e.target.value) : Number(e.target.value) / 2.20462)} className="rpg-slider" />
               </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: PERIMETER SOCKETS */}
-        <div className="flex flex-col gap-12 justify-center items-end pr-12">
+        {/* RIGHT COLUMN */}
+        <div className="gear-column-right">
           <Socket label="GLOVES" active={loadout.gloves} sub="Gloves" onClick={() => setLoadout({...loadout, gloves: !loadout.gloves})} />
           <Socket label="ENGINE" active={true} sub={loadout.engine.model} onClick={() => setMenu({type: 'engine'})} />
           <Socket label="FRAME" active={true} sub={loadout.frame.model} onClick={() => setMenu({type: 'frame'})} />
@@ -147,7 +123,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* ATTRIBUTE PEDESTAL */}
       <div className="attribute-box space-y-12">
         <div className="flex justify-between items-center border-b-4 border-slate-800 pb-10">
            <div className="flex bg-black/50 border-2 border-slate-700 p-1">

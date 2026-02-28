@@ -1,189 +1,272 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
 
 :root {
-  --rpg-gold: #c5a059;
-  --rpg-alert: #ff3e3e;
+  --rpg-gold: #d4af37;
+  --rpg-gold-glow: rgba(212, 175, 55, 0.4);
+  --danger-red: #ff4444;
 }
 
 body {
-  background: radial-gradient(circle, #1a1a1a 0%, #020202 100%);
-  color: #e0e0e0;
   margin: 0;
-  display: flex; justify-content: center; align-items: flex-start;
-  min-height: 100vh; font-family: 'Crimson Text', serif; overflow-x: hidden;
+  background-color: #0a0a0a;
+  color: #e0e0e0;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
 }
 
+.font-medieval { font-family: 'MedievalSharp', cursive; }
+
+/* DESKTOP VIEWPORT */
 .app-viewport {
-  display: flex; flex-direction: column; align-items: center;
-  width: 100%; max-width: 1800px; position: relative; padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 40px;
+  background: radial-gradient(circle at center, #1a1a1a 0%, #050505 100%);
 }
 
-/* WIDE PERIMETER GRID: FLANKS THE PILOT MODEL */
 .character-screen {
-  display: grid;
-  grid-template-columns: 350px 1fr 350px;
-  width: 1400px; /* Locked to match pedestal width */
+  display: flex;
+  justify-content: center;
   align-items: center;
-  margin-bottom: 20px;
-  position: relative;
+  gap: 60px;
+  width: 1400px;
+  margin-top: 40px;
 }
 
 /* GEAR SOCKETS */
 .gear-socket {
-  width: 180px; height: 180px;
-  background: rgba(0,0,0,0.95); border: 4px solid #2a2a2a;
-  box-shadow: inset 0 0 40px #000, 0 15px 30px rgba(0,0,0,0.7);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  cursor: pointer; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.gear-socket.active { border-color: #a335ee; box-shadow: 0 0 60px rgba(163, 53, 238, 1); }
-
-/* HERO DATA: RAISED TO CHEST LEVEL */
-.hero-data-anchor {
-  position: absolute;
-  top: 50%; /* Raised from 72% */
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
+  width: 200px;
+  height: 200px;
+  border: 4px solid #333;
+  background: rgba(20, 20, 20, 0.8);
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+}
+
+.gear-socket.active {
+  border-color: var(--rpg-gold);
+  box-shadow: 0 0 30px var(--rpg-gold-glow), inset 0 0 20px var(--rpg-gold-glow);
+}
+
+.gear-socket:hover {
+  transform: scale(1.05) translateY(-5px);
+  border-color: #fff;
+}
+
+.socket-label {
+  position: absolute;
+  top: -12px;
+  background: #000;
+  padding: 0 12px;
+  color: var(--rpg-gold);
+  font-family: 'MedievalSharp', cursive;
+  font-size: 14px;
+  letter-spacing: 3px;
+}
+
+/* HERO DATA & PILOT */
+.hero-data-anchor {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  z-index: 20;
   pointer-events: none;
-  z-index: 100;
 }
 
 .hero-weight-number {
-  font-family: 'MedievalSharp', cursive; font-size: 160px;
-  font-weight: 900; line-height: 0.8; color: #fff; text-shadow: 0 0 60px #000;
+  font-size: 180px;
+  font-weight: 900;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 50px rgba(0,0,0,1), 0 0 20px var(--rpg-gold-glow);
+  letter-spacing: -5px;
 }
 
-.safety-alert-box {
-  background: rgba(255, 62, 62, 0.2); border: 5px solid var(--rpg-alert);
-  padding: 25px 80px; margin-top: 30px;
-  box-shadow: 0 0 80px rgba(255, 62, 62, 0.7);
-  animation: alert-flash 1s infinite alternate;
+/* COMMAND CENTER SLIDERS */
+.command-center {
+  width: 600px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #222;
+  padding: 40px;
+  margin-top: -50px;
+  position: relative;
+  z-index: 30;
 }
 
-/* SIDE DRAWER LOOT MENU */
+.rpg-slider {
+  width: 100%;
+  height: 12px;
+  appearance: none;
+  background: #111;
+  border: 2px solid #333;
+  outline: none;
+}
+
+.rpg-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 30px;
+  height: 30px;
+  background: var(--rpg-gold);
+  cursor: pointer;
+  border: 3px solid #000;
+}
+
+/* SIDE DRAWER (GEAR SELECTION) */
 .side-drawer {
-  position: fixed; top: 0; right: -550px;
-  width: 500px; height: 100vh;
-  background: rgba(5, 5, 5, 0.99); border-left: 5px solid var(--rpg-gold);
-  box-shadow: -40px 0 100px rgba(0,0,0,1);
-  z-index: 9999; transition: right 0.4s ease-out; padding: 60px 40px;
+  position: fixed;
+  top: 0;
+  right: -500px; /* Hidden off-screen on desktop */
+  width: 450px;
+  height: 100vh;
+  background: #0d0d0d;
+  border-left: 5px solid var(--rpg-gold);
+  z-index: 100;
+  padding: 40px;
+  transition: right 0.4s ease;
+  box-shadow: -20px 0 50px rgba(0,0,0,0.9);
 }
+
 .side-drawer.open { right: 0; }
 
 .loot-card {
-  background: linear-gradient(to bottom, #1a1a1a, #050505);
-  border: 2px solid #333; padding: 30px; margin-bottom: 20px;
-  text-align: center; transition: 0.2s; cursor: pointer;
+  background: #1a1a1a;
+  border-left: 8px solid #333;
+  padding: 20px;
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.loot-card:hover { border-color: var(--rpg-gold); transform: translateX(-10px); }
 
-/* MASSIVE ATTRIBUTE PEDESTAL */
+.loot-card:hover {
+  background: #252525;
+  border-left-color: var(--rpg-gold);
+  transform: translateX(10px);
+}
+
+/* ATTRIBUTE PEDESTAL */
 .attribute-box {
-  width: 1400px; /* Aligns with gear grid */
-  background: #020617; color: #f4e4bc;
-  border: 4px solid #1e293b; border-top: 10px solid var(--rpg-gold);
-  padding: 60px 100px; font-family: 'MedievalSharp', cursive;
+  width: 1400px;
+  background: rgba(10, 10, 10, 0.9);
+  border: 4px solid #222;
+  padding: 60px;
+  margin-top: 80px;
 }
 
-.attr-value-huge { font-size: 120px; font-weight: 900; color: #fff; line-height: 1; }
-.attr-label-huge { font-size: 38px; color: #94a3b8; text-transform: uppercase; letter-spacing: 6px; }
+.attr-label-huge {
+  font-family: 'MedievalSharp', cursive;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 6px;
+  font-size: 24px;
+}
 
-/* SLIDER TRACKS */
-input[type=range].rpg-slider {
-  -webkit-appearance: none; appearance: none; background: transparent; width: 100%;
+.attr-value-huge {
+  font-size: 90px;
+  font-weight: 900;
+  line-height: 1;
 }
-input[type=range].rpg-slider::-webkit-slider-runnable-track {
-  height: 22px; background: #2a1e12; border: 1px solid #c5a059; border-radius: 11px;
-}
-input[type=range].rpg-slider::-webkit-slider-thumb {
-  -webkit-appearance: none; height: 52px; width: 52px;
-  background: radial-gradient(circle, #ffd700 0%, #8b6508 100%);
-  border: 3px solid #000; cursor: pointer; margin-top: -15px;
-}
-/* MOBILE FLANKING REPAIR */
-/* MOBILE VIEWPORT LOCK */
-/* MOBILE FLANKING & MODEL RECOVERY */
-/* MOBILE UI REFINEMENT */
-/* MOBILE CLEANUP: SLIDER RESTORATION & DRAWER HIDE */
+
+/* -------------------------------------------------------------------------- */
+/* FULL MOBILE OVERRIDE */
+/* -------------------------------------------------------------------------- */
+
 @media (max-width: 1024px) {
   .app-viewport {
     width: 100vw;
     padding: 10px 0;
-    overflow-x: hidden; /* Hard-stops the horizontal scroll */
-    position: relative;
+    overflow-x: hidden; /* FIXED: Kills the horizontal yellow line */
   }
 
   .character-screen {
     display: flex;
     flex-direction: column;
     width: 100%;
-    align-items: center;
+    gap: 0;
+    margin-top: 10px;
   }
 
-  /* SIDE DRAWER: MOVED COMPLETELY OFF-SCREEN */
-  .side-drawer {
-    right: -105vw; /* Pushed further back to hide the yellow border */
-    width: 90vw;
-    transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .side-drawer.open {
-    right: 0;
-  }
-
-  /* COMMAND CENTER: VISIBILITY RESTORATION */
-  .command-center {
-    display: block !important; /* Forces visibility */
-    width: 94% !important;
-    margin: 20px auto !important;
-    padding: 30px 15px !important;
-    background: rgba(0,0,0,0.95);
-    border: 3px solid var(--rpg-gold);
-    z-index: 50; /* Ensures it sits above any phantom layers */
+  /* FLANKING ROWS: RE-STABLIZED */
+  .gear-column-left, .gear-column-right {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    gap: 12px;
+    padding: 15px;
     box-sizing: border-box;
+    background: rgba(0,0,0,0.3);
   }
 
-  /* SLIDER TYPOGRAPHY */
+  .gear-column-left { order: 1; }
+  .hero-column { order: 2; width: 100%; min-height: 480px; position: relative; }
+  .gear-column-right { order: 3; }
+
+  /* PILOT MODEL SCALING */
+  img[alt="Pilot"] {
+    height: 450px !important;
+    width: auto;
+    opacity: 0.8;
+  }
+
+  /* SIDE DRAWER: HARD LOCK OFF-SCREEN */
+  .side-drawer {
+    right: -105vw; /* FIXED: Prevents yellow border peek */
+    width: 92vw;
+    border-left-width: 8px;
+  }
+  .side-drawer.open { right: 0; }
+
+  /* SLIDERS: LEGIBILITY BOOST */
+  .command-center {
+    display: block !important;
+    width: 92% !important;
+    margin: 20px auto !important;
+    padding: 30px 20px !important;
+    box-sizing: border-box;
+    z-index: 50;
+  }
+
   .command-center span {
-    font-size: 26px !important; 
-    display: inline-block;
-    margin-bottom: 10px;
-    color: var(--rpg-gold);
+    font-size: 26px !important; /* FIXED: High visibility for field use */
     font-weight: 900;
+    color: var(--rpg-gold);
   }
 
   .command-center .text-amber-500 {
-    font-size: 30px !important;
-    float: right;
+    font-size: 32px !important;
   }
 
-  /* PILOT MODEL AREA */
-  .character-screen > div:nth-child(2) {
-    min-height: 450px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    z-index: 10;
-  }
-
-  img[alt="Pilot"] {
-    height: 420px !important;
-    width: auto;
-  }
-
-  /* ATTRIBUTE BOX */
+  /* ATTRIBUTE PEDESTAL */
   .attribute-box {
-    width: 94% !important;
+    width: 92% !important;
     padding: 30px 15px;
-    margin: 10px auto;
+    margin: 15px auto;
     box-sizing: border-box;
   }
 
   .attr-value-huge { font-size: 60px; }
-  .attr-label-huge { font-size: 22px; }
+  .attr-label-huge { font-size: 20px; letter-spacing: 3px; }
+
+  /* GEAR SOCKETS */
+  .gear-socket {
+    width: 100%;
+    height: 140px;
+  }
+  .socket-label { font-size: 12px; }
+  .gear-socket span:last-child { font-size: 18px; }
+
+  /* WEIGHT HUD */
+  .hero-data-anchor {
+    top: 45%;
+    transform: translate(-50%, -50%) scale(0.7);
+  }
 }
