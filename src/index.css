@@ -108,6 +108,7 @@ input[type=range].rpg-slider::-webkit-slider-thumb {
 }
 /* MOBILE FLANKING REPAIR */
 /* MOBILE VIEWPORT LOCK */
+/* MOBILE FLANKING & MODEL RECOVERY */
 @media (max-width: 1024px) {
   .app-viewport {
     width: 100vw;
@@ -115,66 +116,68 @@ input[type=range].rpg-slider::-webkit-slider-thumb {
     overflow-x: hidden;
   }
 
-  /* FLANKING GRID: FORCES ICONS TO LEFT/RIGHT EDGES */
   .character-screen {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* Split screen in half */
-    grid-template-areas: 
-      "left-icons right-icons"
-      "pilot pilot"; /* Pilot sits below the header-style icons */
+    display: flex;
+    flex-direction: column; /* Stack the sections vertically */
     width: 100%;
-    gap: 10px;
-    padding: 0 10px;
+    align-items: center;
+    gap: 0;
   }
 
-  /* LEFT GEAR COLUMN */
-  .character-screen > div:first-child {
-    grid-area: left-icons;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 10px;
-  }
-
-  /* RIGHT GEAR COLUMN */
+  /* TOP ROW: HEAD, WING, GLOVES, ENGINE */
+  .character-screen > div:first-child,
   .character-screen > div:last-child {
-    grid-area: right-icons;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two icons per row */
+    width: 100%;
+    padding: 15px;
+    gap: 15px;
+    background: rgba(0,0,0,0.4);
   }
 
-  /* PILOT MODEL ANCHOR */
+  /* CENTER AREA: THE PILOT */
   .character-screen > div:nth-child(2) {
-    grid-area: pilot;
-    min-height: 450px;
-    margin-top: -50px; /* Pulls model up under icons */
-    z-index: 1;
+    position: relative;
+    width: 100%;
+    min-height: 550px; /* Forces the model to be visible */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: -30px 0; /* Tightens the gap between icon rows */
   }
 
-  /* SIZE SCALING FOR ACCESSIBILITY */
+  img[alt="Pilot"] {
+    height: 500px !important; /* Forces the image height */
+    width: auto;
+    object-fit: contain;
+  }
+
+  /* SCALE ICONS FOR TAPPING */
   .gear-socket {
-    width: calc(50vw - 25px); /* Perfectly fills half the screen minus gap */
-    max-width: 160px;
-    height: 140px;
-    border-width: 2px;
+    width: 100%;
+    max-width: 180px;
+    height: 150px;
+    margin: 0 auto;
+    border-width: 3px;
   }
 
-  .socket-label { font-size: 11px; letter-spacing: 2px; }
-  .gear-socket span:last-child { font-size: 16px; }
+  .socket-label { font-size: 12px; letter-spacing: 2px; }
+  .gear-socket span:last-child { font-size: 18px; }
 
-  /* HERO WEIGHT OVER MODEL */
-  .hero-weight-number { font-size: 90px; }
-  .hero-data-anchor { top: 40%; transform: translate(-50%, -50%) scale(0.8); }
+  /* WEIGHT & WARNINGS */
+  .hero-data-anchor {
+    top: 50%; /* Centered on the pilot's chest */
+    transform: translate(-50%, -50%) scale(0.75);
+  }
+  .hero-weight-number { font-size: 120px; }
 
   /* COMMAND CENTER & PEDESTAL */
   .command-center, .attribute-box {
-    width: 96% !important;
-    padding: 20px;
+    width: 95% !important;
+    padding: 30px 15px;
     margin: 10px auto;
   }
 
-  .attr-value-huge { font-size: 55px; }
-  .attr-label-huge { font-size: 18px; letter-spacing: 2px; }
+  .attr-value-huge { font-size: 65px; }
+  .attr-label-huge { font-size: 22px; letter-spacing: 4px; }
 }
