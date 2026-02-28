@@ -1,6 +1,6 @@
 :root {
-  --accent: #f59e0b; /* Original Amber */
-  --bg: #0a0a0a;
+  --accent: #a855f7; /* Purple Restored */
+  --bg: #050505;
 }
 
 body {
@@ -156,68 +156,77 @@ body {
   font-weight: 900;
 }
 
-/* MOBILE RESPONSIVENESS */
+/* SINGLE-SCREEN MOBILE OVERRIDE */
 @media (max-width: 1024px) {
   .app-viewport {
-    width: 100vw;
-    overflow-x: hidden;
+    height: 100vh; /* Lock height to prevent vertical scrolling */
+    overflow: hidden;
+    padding: 5px 0;
   }
 
   .character-screen {
     width: 100%;
-    flex-direction: column;
-    gap: 0;
+    height: 65vh; /* Take up the top portion */
+    flex-direction: row !important; /* Force flanking side-by-side even on mobile */
+    gap: 5px;
+    margin-top: 0;
   }
 
-  /* FLANKING: TOP & BOTTOM ROWS */
+  /* MINI GEAR COLUMNS FOR SIDE-BY-SIDE VIEW */
   .gear-column-left, .gear-column-right {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    width: 100%;
-    padding: 10px;
-    gap: 10px;
-    box-sizing: border-box;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 80px !important; /* Narrow columns to fit pilot in center */
+    gap: 8px;
+    padding: 0;
+    justify-content: center;
   }
 
-  .gear-column-left { order: 1; }
-  .hero-column { 
-    order: 2; 
-    width: 100%;
-    height: 550px !important; /* FIXED: Prevents squashing pilot image */
-  }
-  .gear-column-right { order: 3; }
-
-  img[alt="Pilot"] {
-    height: 100% !important;
-    width: auto;
-    object-fit: contain;
+  .gear-socket {
+    width: 75px !important;
+    height: 75px !important;
+    border-width: 1px;
   }
 
-  /* SLIDERS */
+  .socket-label { font-size: 8px; top: -6px; padding: 0 4px; }
+  .gear-socket span:last-child { font-size: 10px !important; px: 1; }
+
+  /* COMPACT CENTER PILOT */
+  .hero-column { height: 100%; }
+  .hero-container { min-height: 100% !important; }
+  img[alt="Pilot"] { height: 60vh !important; }
+
+  .hero-weight-number { font-size: 80px; }
+  .hero-data-anchor { transform: translate(-50%, -50%) scale(0.6); }
+
+  /* FIXED HUD AT BOTTOM */
   .command-center {
-    width: 94% !important;
-    margin: 10px auto !important;
-    padding: 25px 15px !important;
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95% !important;
+    padding: 15px !important;
+    margin: 0 !important;
+    border-color: #333;
   }
-
-  .command-center span {
-    font-size: 22px !important;
-  }
-
-  /* SIDE DRAWER: HIDE YELLOW LINE */
-  .side-drawer {
-    right: -110vw !important;
-    width: 90vw;
-  }
-  .side-drawer.open { right: 0; }
+  .command-center span { font-size: 16px !important; }
 
   .attribute-box {
-    width: 94% !important;
-    padding: 20px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100% !important;
+    height: 110px;
+    padding: 10px 15px !important;
+    margin: 0 !important;
+    border: none;
+    border-top: 1px solid #333;
   }
 
-  .hero-weight-number { font-size: 110px; }
-  .hero-data-anchor { transform: translate(-50%, -50%) scale(0.85); }
+  .attr-value-huge { font-size: 36px; }
+  .attr-label-huge { font-size: 12px; }
   
-  .gear-socket { width: 100%; height: 140px; }
+  .side-drawer { right: -110vw !important; width: 95vw; }
+  .side-drawer.open { right: 0; }
 }

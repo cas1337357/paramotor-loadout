@@ -39,25 +39,25 @@ export default function App() {
     <div className="app-viewport">
       {/* SELECTION DRAWER */}
       <div className={`side-drawer ${menu ? 'open' : ''}`}>
-        <div className="flex justify-between items-center mb-10 border-b border-zinc-800 pb-6">
-           <h3 className="text-amber-500 font-bold text-3xl uppercase tracking-tighter">Equip {menu?.type}</h3>
+        <div className="flex justify-between items-center mb-10 border-b border-purple-900 pb-6">
+           <h3 className="text-purple-500 font-bold text-3xl uppercase tracking-tighter">Equip {menu?.type}</h3>
            <button onClick={() => setMenu(null)} className="text-zinc-500 hover:text-white font-bold text-xl">CLOSE [X]</button>
         </div>
         <div className="pr-2 h-[80vh] overflow-y-auto custom-scrollbar">
           {menu?.type === 'engine' && GEAR_DATA.engines.map(e => (
             <div key={e.id} onClick={() => {setLoadout({...loadout, engine: e}); setMenu(null)}} className="loot-card">
-              <p className="text-amber-500 font-bold uppercase text-xs mb-1">{e.brand}</p>
+              <p className="text-purple-500 font-bold uppercase text-xs mb-1">{e.brand}</p>
               <p className="text-2xl font-bold text-white">{e.model}</p>
             </div>
           ))}
           {menu?.type === 'reserve' && GEAR_DATA.reserves.map(r => (
             <div key={r.id} onClick={() => {setLoadout({...loadout, reserve: r}); setMenu(null)}} className="loot-card">
-              <p className="text-zinc-400 font-bold uppercase text-xs mb-1">{r.brand}</p>
+              <p className="text-purple-400 font-bold uppercase text-xs mb-1">{r.brand}</p>
               <p className="text-2xl font-bold text-white">{r.model}</p>
             </div>
           ))}
           {menu?.type === 'wing' && menu.step === 'mfr' && Object.keys(GEAR_DATA.manufacturers).map(m => (
-            <div key={m} onClick={() => setMenu({type: 'wing', step: 'model', mfr: m})} className="loot-card text-amber-500 font-bold text-2xl uppercase">{m}</div>
+            <div key={m} onClick={() => setMenu({type: 'wing', step: 'model', mfr: m})} className="loot-card text-purple-500 font-bold text-2xl uppercase">{m}</div>
           ))}
           {menu?.type === 'wing' && menu.step === 'model' && Object.keys(GEAR_DATA.manufacturers[menu.mfr].models).map(mod => (
             <div key={mod} onClick={() => setMenu({type: 'wing', step: 'size', mfr: menu.mfr, model: mod})} className="loot-card text-white font-bold text-xl uppercase">{mod}</div>
@@ -83,7 +83,7 @@ export default function App() {
         </div>
 
         <div className="hero-column">
-          <div className="relative flex justify-center items-center min-h-[900px] w-full">
+          <div className="relative flex justify-center items-center min-h-[900px] w-full hero-container">
             <img src={pilotImage} alt="Pilot" className={`h-[850px] w-auto transition-all ${menu ? 'opacity-10 blur-xl' : 'opacity-90'}`} />
             {!menu && (
               <div className="hero-data-anchor">
@@ -100,14 +100,14 @@ export default function App() {
               <div>
                 <div className="flex justify-between uppercase tracking-widest mb-4">
                   <span className="text-zinc-400 font-bold">Fuel Reserve</span>
-                  <span className="text-amber-500 font-bold">{fuelLiters}L</span>
+                  <span className="text-purple-500 font-bold">{fuelLiters}L</span>
                 </div>
                 <input type="range" min="0" max="15" step="1" value={fuelLiters} onChange={(e) => setFuelLiters(Number(e.target.value))} className="rpg-slider" />
               </div>
               <div>
                 <div className="flex justify-between uppercase tracking-widest mb-4">
                   <span className="text-zinc-400 font-bold">Pilot Mass ({unitL})</span>
-                  <span className="text-amber-500 font-bold">{convert(pilotWeight).toFixed(1)}</span>
+                  <span className="text-purple-500 font-bold">{convert(pilotWeight).toFixed(1)}</span>
                 </div>
                 <input type="range" min="0" max={unit === 'kg' ? 300 : 660} step="1" value={convert(pilotWeight)} onChange={(e) => setPilotWeight(unit === 'kg' ? Number(e.target.value) : Number(e.target.value) / 2.20462)} className="rpg-slider" />
               </div>
@@ -125,8 +125,8 @@ export default function App() {
       <div className="attribute-box space-y-10">
         <div className="flex justify-between items-center border-b border-zinc-800 pb-8">
            <div className="flex bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden">
-              <button onClick={() => setUnit('kg')} className={`px-10 py-3 text-2xl font-bold transition-all ${unit === 'kg' ? 'bg-amber-600 text-white' : 'text-zinc-600'}`}>KG</button>
-              <button onClick={() => setUnit('lbs')} className={`px-10 py-3 text-2xl font-bold transition-all ${unit === 'lbs' ? 'bg-amber-600 text-white' : 'text-zinc-600'}`}>LBS</button>
+              <button onClick={() => setUnit('kg')} className={`px-10 py-3 text-2xl font-bold transition-all ${unit === 'kg' ? 'bg-purple-600 text-white' : 'text-zinc-600'}`}>KG</button>
+              <button onClick={() => setUnit('lbs')} className={`px-10 py-3 text-2xl font-bold transition-all ${unit === 'lbs' ? 'bg-purple-600 text-white' : 'text-zinc-600'}`}>LBS</button>
            </div>
            <div className={`px-12 py-6 border-4 font-bold text-4xl tracking-widest rounded-xl ${stats.total <= 115.2 ? 'border-green-600 text-green-500' : 'border-red-600 text-red-500 animate-pulse'}`}>
               {stats.total <= 115.2 ? '✓ PART 103' : '⚠ EXPERIMENTAL'}
@@ -134,7 +134,7 @@ export default function App() {
         </div>
         <div className="grid grid-cols-2 gap-10">
           <div><p className="attr-label-huge">Wing Loading</p><p className="attr-value-huge text-blue-500">{stats.loading.toFixed(2)}</p></div>
-          <div className="text-right"><p className="attr-label-huge">Empty Mass</p><p className="attr-value-huge text-amber-500">{convert(stats.empty).toFixed(1)}</p></div>
+          <div className="text-right"><p className="attr-label-huge">Empty Mass</p><p className="attr-value-huge text-purple-500">{convert(stats.empty).toFixed(1)}</p></div>
         </div>
       </div>
     </div>
