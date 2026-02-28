@@ -124,6 +124,23 @@ export default function App() {
               </div>
           </div>
         </div>
+        {/* COMMAND CENTER SLIDERS */}
+<div className="command-center space-y-12">
+    <div>
+      <div className="flex justify-between uppercase tracking-widest mb-4">
+        <span>Fuel Reserve</span>
+        <span className="text-amber-500 italic">{fuelLiters}L</span>
+      </div>
+      <input type="range" min="0" max="15" step="1" value={fuelLiters} onChange={(e) => setFuelLiters(Number(e.target.value))} className="rpg-slider" />
+    </div>
+    <div>
+      <div className="flex justify-between uppercase tracking-widest mb-4">
+        <span>Pilot Mass ({unitL})</span>
+        <span className="text-amber-500 italic">{convert(pilotWeight).toFixed(1)}</span>
+      </div>
+      <input type="range" min="0" max={unit === 'kg' ? 300 : 660} step="1" value={convert(pilotWeight)} onChange={(e) => setPilotWeight(unit === 'kg' ? Number(e.target.value) : Number(e.target.value) / 2.20462)} className="rpg-slider" />
+    </div>
+</div>
 
         {/* RIGHT COLUMN */}
         <div className="flex flex-col gap-10 justify-center items-end pr-12">

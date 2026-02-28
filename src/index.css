@@ -110,11 +110,12 @@ input[type=range].rpg-slider::-webkit-slider-thumb {
 /* MOBILE VIEWPORT LOCK */
 /* MOBILE FLANKING & MODEL RECOVERY */
 /* MOBILE UI REFINEMENT */
+/* MOBILE CLEANUP: SLIDER RESTORATION & DRAWER HIDE */
 @media (max-width: 1024px) {
   .app-viewport {
     width: 100vw;
     padding: 10px 0;
-    overflow-x: hidden; /* FIXED: Kills the side-scrolling yellow line */
+    overflow-x: hidden; /* Hard-stops the horizontal scroll */
     position: relative;
   }
 
@@ -123,65 +124,66 @@ input[type=range].rpg-slider::-webkit-slider-thumb {
     flex-direction: column;
     width: 100%;
     align-items: center;
-    gap: 0;
   }
 
-  /* TOP & BOTTOM GEAR SHELVES */
-  .character-screen > div:first-child,
-  .character-screen > div:last-child {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    width: 100%;
-    padding: 10px;
-    gap: 10px;
-    box-sizing: border-box; /* FIXED: Prevents padding from pushing width past 100% */
+  /* SIDE DRAWER: MOVED COMPLETELY OFF-SCREEN */
+  .side-drawer {
+    right: -105vw; /* Pushed further back to hide the yellow border */
+    width: 90vw;
+    transition: right 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .side-drawer.open {
+    right: 0;
   }
 
-  /* PILOT & HERO WEIGHT */
-  .character-screen > div:nth-child(2) {
-    position: relative;
-    width: 100%;
-    min-height: 500px;
-    display: flex;
-    justify-content: center;
-  }
-
-  img[alt="Pilot"] {
-    height: 480px !important;
-    width: auto;
-  }
-
-  /* SLIDER LABELS: MASSIVE BOOST */
+  /* COMMAND CENTER: VISIBILITY RESTORATION */
   .command-center {
-    width: 92% !important; /* FIXED: Prevents edge bleeding */
-    margin: 10px auto;
-    padding: 30px 15px;
+    display: block !important; /* Forces visibility */
+    width: 94% !important;
+    margin: 20px auto !important;
+    padding: 30px 15px !important;
+    background: rgba(0,0,0,0.95);
+    border: 3px solid var(--rpg-gold);
+    z-index: 50; /* Ensures it sits above any phantom layers */
     box-sizing: border-box;
   }
 
+  /* SLIDER TYPOGRAPHY */
   .command-center span {
-    font-size: 28px !important; /* FIXED: Makes "Fuel Reserve" labels very large */
-    letter-spacing: 2px;
+    font-size: 26px !important; 
+    display: inline-block;
+    margin-bottom: 10px;
+    color: var(--rpg-gold);
+    font-weight: 900;
   }
 
   .command-center .text-amber-500 {
-    font-size: 32px !important; /* Makes the number values stand out */
+    font-size: 30px !important;
+    float: right;
   }
 
-  /* ATTRIBUTE PEDESTAL */
+  /* PILOT MODEL AREA */
+  .character-screen > div:nth-child(2) {
+    min-height: 450px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  img[alt="Pilot"] {
+    height: 420px !important;
+    width: auto;
+  }
+
+  /* ATTRIBUTE BOX */
   .attribute-box {
-    width: 92% !important; /* FIXED: Keeps it inside the screen bounds */
-    padding: 40px 20px;
-    margin: 20px auto;
+    width: 94% !important;
+    padding: 30px 15px;
+    margin: 10px auto;
     box-sizing: border-box;
   }
 
-  .attr-value-huge { font-size: 70px; }
-  .attr-label-huge { font-size: 24px; letter-spacing: 4px; }
-
-  /* GEAR SOCKETS */
-  .gear-socket {
-    height: 140px;
-    width: 100%;
-  }
+  .attr-value-huge { font-size: 60px; }
+  .attr-label-huge { font-size: 22px; }
 }
