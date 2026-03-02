@@ -1,157 +1,232 @@
-import React, { useState, useMemo } from 'react';
-import { GEAR_DATA } from './gearData';
-import pilotImage from './pilot_model.png';
+import React, { useState, useEffect } from 'react';
+import './index.css';
 
 export default function App() {
-  const [unit, setUnit] = useState('kg');
-  const [pilotWeight, setPilotWeight] = useState(85);
-  const [fuelLiters, setFuelLiters] = useState(5);
-  const [menu, setMenu] = useState(null); 
-
-  // Initial loadout uses your verified Polini Thor 202 and DriftAir 2
-  const [loadout, setLoadout] = useState({
-    engine: GEAR_DATA.engines[0],
-    frame: GEAR_DATA.frames[0],
-    glider: { ...GEAR_DATA.manufacturers.Dudek.models["DriftAir 2"][2], brand: 'Dudek', model: 'DriftAir 2' },
-    reserve: GEAR_DATA.reserves[0],
-    accessory: GEAR_DATA.accessories[0],
-    helmet: true, gloves: true, boots: true
-  });
-
-  const convert = (val) => unit === 'kg' ? val : val * 2.20462;
-  const unitL = unit === 'kg' ? 'kg' : 'lbs';
-
-  const stats = useMemo(() => {
-    const gearBase = (loadout.engine?.weight || 0) + (loadout.frame?.weight || 0) + (loadout.glider?.weight || 0) + (loadout.accessory?.weight || 0) + (loadout.reserve?.weight || 0);
-    const std = (loadout.helmet ? GEAR_DATA.standardWeights.helmet : 0) + (loadout.gloves ? GEAR_DATA.standardWeights.gloves : 0) + (loadout.boots ? GEAR_DATA.standardWeights.boots : 0);
-    const total = gearBase + std + pilotWeight + (fuelLiters * 0.748);
-    const loading = total / (loadout.glider?.area || 1);
+    const [isKg, setIsKg] = useState(true);
     
-    let warning = null;
-    if (loading > 6.8) warning = "CRITICAL: OVERLOADED";
-    else if (loading > 6.2) warning = "WARNING: HIGH LOADING";
-    else if (loading < 3.2) warning = "DANGER: UNDER LOADED";
-    
-    return { total, loading, warning, empty: total - pilotWeight };
-  }, [loadout, pilotWeight, fuelLiters]);
+    // Core state values
+    const [pilotWeight, setPilotWeight] = useState(85);
+    const [motorWeight, setMotorWeight] = useState(32);
+    const [fuelVol, setFuelVol] = useState(10);
+    const [wingWeight, setWingWeight] = useState(8);
 
-  return (
-    <div className="app-viewport">
-      {/* SELECTION DRAWER */}
-      <div className={`side-drawer ${menu ? 'open' : ''}`}>
-        <div className="flex justify-between items-center mb-10 border-b border-purple-900 pb-6">
-           <h3 className="text-purple-500 font-bold text-3xl uppercase tracking-tighter">Equip {menu?.type}</h3>
-           <button onClick={() => setMenu(null)} className="text-zinc-500 hover:text-white font-bold text-xl">CLOSE [X]</button>
-        </div>
-        <div className="pr-2 h-[80vh] overflow-y-auto custom-scrollbar">
-          {menu?.type === 'engine' && GEAR_DATA.engines.map(e => (
-            <div key={e.id} onClick={() => {setLoadout({...loadout, engine: e}); setMenu(null)}} className="loot-card">
-              <p className="text-purple-500 font-bold uppercase text-xs mb-1">{e.brand}</p>
-              <p className="text-2xl font-bold text-white">{e.model}</p>
+    // Derived states for display
+    const [totalWeight, setTotalWeight] = useState(0);
+    const [fuelWeight, setFuelWeight] = useState(0);
+    const [showWarning, setShowWarning] = useState(false);
+
+    // Bounds and steps definitions
+    const config = {
+        pilot: { kg: { min: 40, max: 150, step: 1 }, lbs: { min: 90, max: 330, step: 1 } },
+        motor: { kg: { min: 15, max: 150, step: 1 }, lbs: { min: 33, max: 330, step: 1 } },
+        fuel:  { kg: { min: 0, max: 25, step: 0.5, unit: 'L' }, lbs: { min: 0, max: 6.5, step: 0.1, unit: 'Gal' } },
+        wing:  { kg: { min: 2, max: 25, step: 0.5 }, lbs: { min: 4, max: 55, step: 1 } }
+    };
+
+    const toggleUnit = (toKg) => {
+        if (isKg === toKg) return;
+        
+        if (toKg) {
+            setPilotWeight(prev => prev / 2.20462);
+            setMotorWeight(prev => prev / 2.20462);
+            setWingWeight(prev => prev / 2.20462);
+            setFuelVol(prev => prev / 0.264172);
+        } else {
+            setPilotWeight(prev => prev * 2.20462);
+            setMotorWeight(prev => prev * 2.20462);
+            setWingWeight(prev => prev * 2.20462);
+            setFuelVol(prev => prev * 0.264172);
+        }
+        setIsKg(toKg);
+    };
+
+    useEffect(() => {
+        // Calculate weights in KG for internal math
+        const pilotKg = isKg ? pilotWeight : pilotWeight / 2.20462;
+        const motorKg = isKg ? motorWeight : motorWeight / 2.20462;
+        const wingKg = isKg ? wingWeight : wingWeight / 2.20462;
+        
+        // 0.72 kg/L is average fuel density
+        const fuelLiters = isKg ? fuelVol : fuelVol / 0.264172;
+        const currentFuelKg = fuelLiters * 0.72; 
+        
+        const currentTotalKg = pilotKg + motorKg + wingKg + currentFuelKg;
+
+        // Convert back to appropriate display unit
+        setFuelWeight(isKg ? currentFuelKg : currentFuelKg * 2.20462);
+        setTotalWeight(isKg ? currentTotalKg : currentTotalKg * 2.20462);
+        
+        // FAA Part 103 Warning (Max empty weight 254 lbs = 115.212 kg)
+        setShowWarning(motorKg > 115.212);
+    }, [pilotWeight, motorWeight, fuelVol, wingWeight, isKg]);
+
+    const formatValue = (val, step) => val.toFixed(step >= 1 ? 0 : 1);
+    const weightUnit = isKg ? 'kg' : 'lbs';
+    const fuelUnit = isKg ? config.fuel.kg.unit : config.fuel.lbs.unit;
+
+    return (
+        <>
+            <header>Paramotor Loadout Calculator</header>
+            
+            <div className="main-container">
+                {/* Input Sliders Panel */}
+                <div className="sliders-panel">
+                    <div className="panel-header">
+                        <span className="panel-title">Gear Weights</span>
+                        <div className="unit-toggle">
+                            <button 
+                                className={`unit-btn ${isKg ? 'active' : ''}`} 
+                                onClick={() => toggleUnit(true)}
+                            >
+                                KG
+                            </button>
+                            <button 
+                                className={`unit-btn ${!isKg ? 'active' : ''}`} 
+                                onClick={() => toggleUnit(false)}
+                            >
+                                LBS
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="slider-group">
+                        <div className="slider-header">
+                            <span>Pilot Body Weight</span>
+                            <span className="slider-value">
+                                {formatValue(pilotWeight, isKg ? config.pilot.kg.step : config.pilot.lbs.step)} {weightUnit}
+                            </span>
+                        </div>
+                        <input 
+                            type="range" 
+                            min={isKg ? config.pilot.kg.min : config.pilot.lbs.min} 
+                            max={isKg ? config.pilot.kg.max : config.pilot.lbs.max} 
+                            step={isKg ? config.pilot.kg.step : config.pilot.lbs.step} 
+                            value={pilotWeight} 
+                            onChange={(e) => setPilotWeight(parseFloat(e.target.value))} 
+                        />
+                    </div>
+
+                    <div className="slider-group">
+                        <div className="slider-header">
+                            <span>Paramotor Empty Weight</span>
+                            <span className="slider-value">
+                                {formatValue(motorWeight, isKg ? config.motor.kg.step : config.motor.lbs.step)} {weightUnit}
+                            </span>
+                        </div>
+                        <input 
+                            type="range" 
+                            min={isKg ? config.motor.kg.min : config.motor.lbs.min} 
+                            max={isKg ? config.motor.kg.max : config.motor.lbs.max} 
+                            step={isKg ? config.motor.kg.step : config.motor.lbs.step} 
+                            value={motorWeight} 
+                            onChange={(e) => setMotorWeight(parseFloat(e.target.value))} 
+                        />
+                    </div>
+
+                    <div className="slider-group">
+                        <div className="slider-header">
+                            <span>Fuel Volume</span>
+                            <span className="slider-value">
+                                {formatValue(fuelVol, isKg ? config.fuel.kg.step : config.fuel.lbs.step)} {fuelUnit}
+                            </span>
+                        </div>
+                        <input 
+                            type="range" 
+                            min={isKg ? config.fuel.kg.min : config.fuel.lbs.min} 
+                            max={isKg ? config.fuel.kg.max : config.fuel.lbs.max} 
+                            step={isKg ? config.fuel.kg.step : config.fuel.lbs.step} 
+                            value={fuelVol} 
+                            onChange={(e) => setFuelVol(parseFloat(e.target.value))} 
+                        />
+                    </div>
+
+                    <div className="slider-group">
+                        <div className="slider-header">
+                            <span>Wing & Reserve Weight</span>
+                            <span className="slider-value">
+                                {formatValue(wingWeight, isKg ? config.wing.kg.step : config.wing.lbs.step)} {weightUnit}
+                            </span>
+                        </div>
+                        <input 
+                            type="range" 
+                            min={isKg ? config.wing.kg.min : config.wing.lbs.min} 
+                            max={isKg ? config.wing.kg.max : config.wing.lbs.max} 
+                            step={isKg ? config.wing.kg.step : config.wing.lbs.step} 
+                            value={wingWeight} 
+                            onChange={(e) => setWingWeight(parseFloat(e.target.value))} 
+                        />
+                    </div>
+                </div>
+
+                {/* Central RPG Loadout Visual */}
+                <div className="rpg-layout">
+                    <div className="pilot-model-container">
+                        <svg viewBox="0 0 200 300" className="pilot-silhouette" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stopColor="#d175ff" />
+                                    <stop offset="100%" stopColor="#8a2be2" />
+                                </linearGradient>
+                            </defs>
+                            <path fill="url(#purpleGrad)" d="M100 30 C120 30 125 50 100 75 C75 50 80 30 100 30 Z" />
+                            <path fill="#2d1b4e" stroke="#d175ff" strokeWidth="2" d="M70 90 C40 90 30 130 50 160 C50 160 60 130 70 115 C80 100 120 100 130 115 C140 130 150 160 150 160 C170 130 160 90 130 90 Z" />
+                            <path fill="#1a0b2e" stroke="#8a2be2" strokeWidth="2" d="M80 115 L80 230 L60 280 L90 280 L100 230 L110 280 L140 280 L120 230 L120 115 Z" />
+                            <circle cx="100" cy="130" r="80" stroke="#d175ff" strokeWidth="4" fill="none" opacity="0.6"/>
+                            <circle cx="100" cy="130" r="70" stroke="#8a2be2" strokeWidth="2" fill="none" opacity="0.3"/>
+                        </svg>
+
+                        <div className="gear-slot slot-helmet" title="Helmet">
+                            <i className="fa-solid fa-helmet-safety"></i>
+                            <span className="gear-label">Helmet</span>
+                        </div>
+                        <div className="gear-slot slot-wing" title="Wing">
+                            <i className="fa-solid fa-parachute-box"></i>
+                            <span className="gear-label">Dudek Driftair 2</span>
+                        </div>
+                        <div className="gear-slot slot-reserve" title="Reserve Parachute">
+                            <i className="fa-solid fa-life-ring"></i>
+                            <span className="gear-label">Reserve</span>
+                        </div>
+                        <div className="gear-slot slot-motor" title="Paramotor Engine">
+                            <i className="fa-solid fa-fan"></i>
+                            <span className="gear-label">Polini Thor 202 (WC)</span>
+                        </div>
+                        <div className="gear-slot slot-instrument" title="Flight Instruments">
+                            <i className="fa-solid fa-walkie-talkie"></i>
+                            <span className="gear-label">Comms/Nav</span>
+                        </div>
+                        <div className="gear-slot slot-boots" title="Footwear">
+                            <i className="fa-solid fa-shoe-prints"></i>
+                            <span className="gear-label">Boots</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Output Stats Panel */}
+                <div className="stats-panel">
+                    <div className="panel-header">
+                        <span className="panel-title">Flight Stats</span>
+                    </div>
+                    
+                    <div className="stat-box">
+                        <div className="stat-title">Total In-Flight Weight</div>
+                        <div className="stat-value">{totalWeight.toFixed(1)} {weightUnit}</div>
+                    </div>
+
+                    <div className="stat-box">
+                        <div className="stat-title">Fuel Weight Estimate</div>
+                        <div className="stat-value" style={{fontSize: '1.8rem'}}>{fuelWeight.toFixed(1)} {weightUnit}</div>
+                    </div>
+
+                    {showWarning && (
+                        <div className="warning-banner">
+                            <i className="fa-solid fa-triangle-exclamation"></i> 
+                            WARNING: EXCEEDS FAA PART 103 LIMIT (254 LBS) 
+                            <i className="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    )}
+                </div>
             </div>
-          ))}
-          {menu?.type === 'reserve' && GEAR_DATA.reserves.map(r => (
-            <div key={r.id} onClick={() => {setLoadout({...loadout, reserve: r}); setMenu(null)}} className="loot-card">
-              <p className="text-purple-400 font-bold uppercase text-xs mb-1">{r.brand}</p>
-              <p className="text-2xl font-bold text-white">{r.model}</p>
-            </div>
-          ))}
-          {menu?.type === 'wing' && menu.step === 'mfr' && Object.keys(GEAR_DATA.manufacturers).map(m => (
-            <div key={m} onClick={() => setMenu({type: 'wing', step: 'model', mfr: m})} className="loot-card text-purple-500 font-bold text-2xl uppercase">{m}</div>
-          ))}
-          {menu?.type === 'wing' && menu.step === 'model' && Object.keys(GEAR_DATA.manufacturers[menu.mfr].models).map(mod => (
-            <div key={mod} onClick={() => setMenu({type: 'wing', step: 'size', mfr: menu.mfr, model: mod})} className="loot-card text-white font-bold text-xl uppercase">{mod}</div>
-          ))}
-          {menu?.type === 'wing' && menu.step === 'size' && GEAR_DATA.manufacturers[menu.mfr].models[menu.model].map(s => (
-            <div key={s.size} onClick={() => {setLoadout({...loadout, glider: {...s, brand: menu.mfr, model: menu.model}}); setMenu(null)}} className="loot-card text-green-500 font-bold text-4xl">{s.size}m</div>
-          ))}
-          {menu?.type === 'accessory' && GEAR_DATA.accessories.map(acc => (
-            <div key={acc.id} onClick={() => {setLoadout({...loadout, accessory: acc}); setMenu(null)}} className="loot-card text-white font-bold text-xl">{acc.name}</div>
-          ))}
-          {menu?.type === 'frame' && GEAR_DATA.frames.map(f => (
-            <div key={f.id} onClick={() => {setLoadout({...loadout, frame: f}); setMenu(null)}} className="loot-card text-white font-bold text-xl uppercase">{f.model}</div>
-          ))}
-        </div>
-      </div>
-
-      <div className="character-screen">
-        <div className="gear-column-left">
-          <Socket label="HEAD" active={loadout.helmet} sub="Helmet" onClick={() => setLoadout({...loadout, helmet: !loadout.helmet})} />
-          <Socket label="WING" active={true} sub={`${loadout.glider.model}`} onClick={() => setMenu({type: 'wing', step: 'mfr'})} />
-          <Socket label="RESERVE" active={true} sub={loadout.reserve.model} onClick={() => setMenu({type: 'reserve'})} />
-          <Socket label="MISC" active={!!loadout.accessory} sub={loadout.accessory?.name || "EMPTY"} onClick={() => setMenu({type: 'accessory'})} />
-        </div>
-
-        <div className="hero-column">
-          <div className="relative flex justify-center items-center min-h-[900px] w-full hero-container">
-            <img src={pilotImage} alt="Pilot" className={`h-[850px] w-auto transition-all ${menu ? 'opacity-10 blur-xl' : 'opacity-90'}`} />
-            {!menu && (
-              <div className="hero-data-anchor">
-                <div className="flex items-baseline justify-center">
-                  <p className="hero-weight-number">{convert(stats.total).toFixed(1)}</p>
-                  <p className="text-5xl text-zinc-500 uppercase font-bold tracking-widest ml-4">{unitL}</p>
-                </div>
-                {stats.warning && (
-                  <div className="safety-alert-box animate-pulse bg-red-900/80 border-4 border-red-500 px-8 py-4 mt-4">
-                    <p className="text-white font-black text-2xl uppercase tracking-tighter italic">{stats.warning}</p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="command-center space-y-10">
-              {/* KG/LBS Toggle moved inside Command Center */}
-              <div className="flex bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden mb-8">
-                <button onClick={() => setUnit('kg')} className={`flex-1 py-3 text-xl font-bold transition-all ${unit === 'kg' ? 'bg-purple-600 text-white shadow-lg' : 'text-zinc-600'}`}>KILOGRAMS</button>
-                <button onClick={() => setUnit('lbs')} className={`flex-1 py-3 text-xl font-bold transition-all ${unit === 'lbs' ? 'bg-purple-600 text-white shadow-lg' : 'text-zinc-600'}`}>POUNDS</button>
-              </div>
-
-              <div>
-                <div className="flex justify-between uppercase tracking-widest mb-4">
-                  <span className="text-zinc-400 font-bold">Fuel Reserve</span>
-                  <span className="text-purple-500 font-bold">{fuelLiters}L</span>
-                </div>
-                <input type="range" min="0" max="15" step="1" value={fuelLiters} onChange={(e) => setFuelLiters(Number(e.target.value))} className="rpg-slider" />
-              </div>
-              <div>
-                <div className="flex justify-between uppercase tracking-widest mb-4">
-                  <span className="text-zinc-400 font-bold">Pilot Mass ({unitL})</span>
-                  <span className="text-purple-500 font-bold">{convert(pilotWeight).toFixed(1)}</span>
-                </div>
-                <input type="range" min="0" max={unit === 'kg' ? 300 : 660} step="1" value={convert(pilotWeight)} onChange={(e) => setPilotWeight(unit === 'kg' ? Number(e.target.value) : Number(e.target.value) / 2.20462)} className="rpg-slider" />
-              </div>
-          </div>
-        </div>
-
-        <div className="gear-column-right">
-          <Socket label="GLOVES" active={loadout.gloves} sub="Gloves" onClick={() => setLoadout({...loadout, gloves: !loadout.gloves})} />
-          <Socket label="ENGINE" active={true} sub={loadout.engine.model} onClick={() => setMenu({type: 'engine'})} />
-          <Socket label="FRAME" active={true} sub={loadout.frame.model} onClick={() => setMenu({type: 'frame'})} />
-          <Socket label="BOOTS" active={loadout.boots} sub="Boots" onClick={() => setLoadout({...loadout, boots: !loadout.boots})} />
-        </div>
-      </div>
-
-      <div className="attribute-box space-y-10">
-        <div className="flex justify-between items-center border-b border-zinc-800 pb-8">
-           <div className={`px-12 py-6 border-4 font-bold text-4xl tracking-widest rounded-xl ${stats.total <= 115.2 ? 'border-green-600 text-green-500' : 'border-red-600 text-red-500 animate-pulse'}`}>
-              {stats.total <= 115.2 ? '✓ PART 103' : '⚠ EXPERIMENTAL'}
-           </div>
-        </div>
-        <div className="grid grid-cols-2 gap-10">
-          <div><p className="attr-label-huge">Wing Loading</p><p className="attr-value-huge text-blue-500">{stats.loading.toFixed(2)}</p></div>
-          <div className="text-right"><p className="attr-label-huge">Empty Mass</p><p className="attr-value-huge text-purple-500">{convert(stats.empty).toFixed(1)}</p></div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Socket({ label, sub, active, onClick }) {
-  return (
-    <div onClick={onClick} className={`gear-socket ${active ? 'active' : 'opacity-30'}`}>
-      <span className="socket-label">{label}</span>
-      <span className="text-3xl font-bold text-white text-center uppercase italic px-4 truncate w-full">{active ? sub : 'EMPTY'}</span>
-    </div>
-  );
+        </>
+    );
 }
