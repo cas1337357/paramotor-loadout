@@ -1,6 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import './index.css';
 
+// Centralized Database for Gear Selection
+const gearDatabase = {
+    helmet: [
+        { id: 'h1', name: 'Standard Helmet', weightKg: 1.2 },
+        { id: 'h2', name: 'Carbon Pro Helmet', weightKg: 0.8 },
+        { id: 'h3', name: 'Comms Integrated', weightKg: 1.5 }
+    ],
+    wing: [
+        { id: 'w1', name: 'Dudek Driftair 2', weightKg: 8.0 },
+        { id: 'w2', name: 'Ozone Roadster 3', weightKg: 6.5 },
+        { id: 'w3', name: 'BGD Luna 3', weightKg: 7.2 }
+    ],
+    reserve: [
+        { id: 'r1', name: 'Square Reserve 120', weightKg: 1.8 },
+        { id: 'r2', name: 'Lightweight Reserve', weightKg: 1.2 },
+        { id: 'r3', name: 'Tandem Reserve', weightKg: 2.8 }
+    ],
+    motor: [
+        { id: 'm1', name: 'Polini Thor 202 (WC)', weightKg: 32.0 },
+        { id: 'm2', name: 'Vittorazi Moster 185', weightKg: 24.5 },
+        { id: 'm3', name: 'Atom 80', weightKg: 20.0 }
+    ],
+    instrument: [
+        { id: 'i1', name: 'Basic Alti/Vario', weightKg: 0.3 },
+        { id: 'i2', name: 'Full Flight Deck', weightKg: 1.5 },
+        { id: 'i3', name: 'Phone Mount Only', weightKg: 0.1 }
+    ],
+    boots: [
+        { id: 'b1', name: 'Standard Hiking Boots', weightKg: 1.5 },
+        { id: 'b2', name: 'Lightweight Trail Runners', weightKg: 0.6 },
+        { id: 'b3', name: 'Heavy Ankle Support', weightKg: 2.0 }
+    ]
+};
+
 export default function App() {
     const [isKg, setIsKg] = useState(true);
     
@@ -9,6 +43,20 @@ export default function App() {
     const [motorWeight, setMotorWeight] = useState(32);
     const [fuelVol, setFuelVol] = useState(10);
     const [wingWeight, setWingWeight] = useState(8);
+
+    // Gear Selection State
+    const [selectedGear, setSelectedGear] = useState({
+        helmet: gearDatabase.helmet[0],
+        wing: gearDatabase.wing[0],
+        reserve: gearDatabase.reserve[0],
+        motor: gearDatabase.motor[0],
+        instrument: gearDatabase.instrument[0],
+        boots: gearDatabase.boots[0]
+    });
+
+    // Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalType, setModalType] = useState(null);
 
     // Derived states for display
     const [totalWeight, setTotalWeight] = useState(0);
@@ -40,25 +88,62 @@ export default function App() {
         setIsKg(toKg);
     };
 
+    const handleSliderChange = (type, value) => {
+        if (type === 'pilot') setPilotWeight(value);
+        if (type === 'fuel') setFuelVol(value);
+        if (type === 'motor') {
+            setMotorWeight(value);
+            setSelectedGear(prev => ({ ...prev, motor: { name: 'Custom Engine', weightKg: isKg ? value : value / 2.20462 } }));
+        }
+        if (type === 'wing') {
+            setWingWeight(value);
+            setSelectedGear(prev => ({ ...prev, wing: { name: 'Custom Wing', weightKg: isKg ? value : value / 2.20462 } }));
+        }
+    };
+
+    const openGearModal = (type) => {
+        setModalType(type);
+        setIsModalOpen(true);
+    };
+
+    const selectGear = (item) => {
+        setSelectedGear(prev => ({ ...prev, [modalType]: item }));
+        
+        if (modalType === 'motor') {
+            setMotorWeight(isKg ? item.weightKg : item.weightKg * 2.20462);
+        }
+        if (modalType === 'wing') {
+            setWingWeight(isKg ? item.weightKg : item.weightKg * 2.20462);
+        }
+        setIsModalOpen(false);
+    };
+
     useEffect(() => {
-        // Calculate weights in KG for internal math
+        // Calculate dynamic weights for calculation
         const pilotKg = isKg ? pilotWeight : pilotWeight / 2.20462;
         const motorKg = isKg ? motorWeight : motorWeight / 2.20462;
         const wingKg = isKg ? wingWeight : wingWeight / 2.20462;
         
-        // 0.72 kg/L is average fuel density
+        // Static Gear Weights
+        const helmetKg = selectedGear.helmet.weightKg;
+        const reserveKg = selectedGear.reserve.weightKg;
+        const instKg = selectedGear.instrument.weightKg;
+        const bootsKg = selectedGear.boots.weightKg;
+        
+        // Fuel Calculation (0.72 kg/L average density)
         const fuelLiters = isKg ? fuelVol : fuelVol / 0.264172;
         const currentFuelKg = fuelLiters * 0.72; 
         
-        const currentTotalKg = pilotKg + motorKg + wingKg + currentFuelKg;
+        const currentTotalKg = pilotKg + motorKg + wingKg + helmetKg + reserveKg + instKg + bootsKg + currentFuelKg;
 
-        // Convert back to appropriate display unit
         setFuelWeight(isKg ? currentFuelKg : currentFuelKg * 2.20462);
         setTotalWeight(isKg ? currentTotalKg : currentTotalKg * 2.20462);
         
         // FAA Part 103 Warning (Max empty weight 254 lbs = 115.212 kg)
-        setShowWarning(motorKg > 115.212);
-    }, [pilotWeight, motorWeight, fuelVol, wingWeight, isKg]);
+        // Empty weight = motor + wing + harness + reserve + helmet + instruments + boots
+        const emptyWeightKg = motorKg + wingKg + helmetKg + reserveKg + instKg + bootsKg;
+        setShowWarning(emptyWeightKg > 115.212);
+    }, [pilotWeight, motorWeight, fuelVol, wingWeight, isKg, selectedGear]);
 
     const formatValue = (val, step) => val.toFixed(step >= 1 ? 0 : 1);
     const weightUnit = isKg ? 'kg' : 'lbs';
@@ -72,20 +157,10 @@ export default function App() {
                 {/* Input Sliders Panel */}
                 <div className="sliders-panel">
                     <div className="panel-header">
-                        <span className="panel-title">Gear Weights</span>
+                        <span className="panel-title">Core Weights</span>
                         <div className="unit-toggle">
-                            <button 
-                                className={`unit-btn ${isKg ? 'active' : ''}`} 
-                                onClick={() => toggleUnit(true)}
-                            >
-                                KG
-                            </button>
-                            <button 
-                                className={`unit-btn ${!isKg ? 'active' : ''}`} 
-                                onClick={() => toggleUnit(false)}
-                            >
-                                LBS
-                            </button>
+                            <button className={`unit-btn ${isKg ? 'active' : ''}`} onClick={() => toggleUnit(true)}>KG</button>
+                            <button className={`unit-btn ${!isKg ? 'active' : ''}`} onClick={() => toggleUnit(false)}>LBS</button>
                         </div>
                     </div>
 
@@ -97,12 +172,10 @@ export default function App() {
                             </span>
                         </div>
                         <input 
-                            type="range" 
-                            min={isKg ? config.pilot.kg.min : config.pilot.lbs.min} 
+                            type="range" min={isKg ? config.pilot.kg.min : config.pilot.lbs.min} 
                             max={isKg ? config.pilot.kg.max : config.pilot.lbs.max} 
                             step={isKg ? config.pilot.kg.step : config.pilot.lbs.step} 
-                            value={pilotWeight} 
-                            onChange={(e) => setPilotWeight(parseFloat(e.target.value))} 
+                            value={pilotWeight} onChange={(e) => handleSliderChange('pilot', parseFloat(e.target.value))} 
                         />
                     </div>
 
@@ -114,12 +187,25 @@ export default function App() {
                             </span>
                         </div>
                         <input 
-                            type="range" 
-                            min={isKg ? config.motor.kg.min : config.motor.lbs.min} 
+                            type="range" min={isKg ? config.motor.kg.min : config.motor.lbs.min} 
                             max={isKg ? config.motor.kg.max : config.motor.lbs.max} 
                             step={isKg ? config.motor.kg.step : config.motor.lbs.step} 
-                            value={motorWeight} 
-                            onChange={(e) => setMotorWeight(parseFloat(e.target.value))} 
+                            value={motorWeight} onChange={(e) => handleSliderChange('motor', parseFloat(e.target.value))} 
+                        />
+                    </div>
+
+                    <div className="slider-group">
+                        <div className="slider-header">
+                            <span>Wing Weight</span>
+                            <span className="slider-value">
+                                {formatValue(wingWeight, isKg ? config.wing.kg.step : config.wing.lbs.step)} {weightUnit}
+                            </span>
+                        </div>
+                        <input 
+                            type="range" min={isKg ? config.wing.kg.min : config.wing.lbs.min} 
+                            max={isKg ? config.wing.kg.max : config.wing.lbs.max} 
+                            step={isKg ? config.wing.kg.step : config.wing.lbs.step} 
+                            value={wingWeight} onChange={(e) => handleSliderChange('wing', parseFloat(e.target.value))} 
                         />
                     </div>
 
@@ -131,29 +217,10 @@ export default function App() {
                             </span>
                         </div>
                         <input 
-                            type="range" 
-                            min={isKg ? config.fuel.kg.min : config.fuel.lbs.min} 
+                            type="range" min={isKg ? config.fuel.kg.min : config.fuel.lbs.min} 
                             max={isKg ? config.fuel.kg.max : config.fuel.lbs.max} 
                             step={isKg ? config.fuel.kg.step : config.fuel.lbs.step} 
-                            value={fuelVol} 
-                            onChange={(e) => setFuelVol(parseFloat(e.target.value))} 
-                        />
-                    </div>
-
-                    <div className="slider-group">
-                        <div className="slider-header">
-                            <span>Wing & Reserve Weight</span>
-                            <span className="slider-value">
-                                {formatValue(wingWeight, isKg ? config.wing.kg.step : config.wing.lbs.step)} {weightUnit}
-                            </span>
-                        </div>
-                        <input 
-                            type="range" 
-                            min={isKg ? config.wing.kg.min : config.wing.lbs.min} 
-                            max={isKg ? config.wing.kg.max : config.wing.lbs.max} 
-                            step={isKg ? config.wing.kg.step : config.wing.lbs.step} 
-                            value={wingWeight} 
-                            onChange={(e) => setWingWeight(parseFloat(e.target.value))} 
+                            value={fuelVol} onChange={(e) => handleSliderChange('fuel', parseFloat(e.target.value))} 
                         />
                     </div>
                 </div>
@@ -161,43 +228,32 @@ export default function App() {
                 {/* Central RPG Loadout Visual */}
                 <div className="rpg-layout">
                     <div className="pilot-model-container">
-                        <svg viewBox="0 0 200 300" className="pilot-silhouette" xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                                    <stop offset="0%" stopColor="#d175ff" />
-                                    <stop offset="100%" stopColor="#8a2be2" />
-                                </linearGradient>
-                            </defs>
-                            <path fill="url(#purpleGrad)" d="M100 30 C120 30 125 50 100 75 C75 50 80 30 100 30 Z" />
-                            <path fill="#2d1b4e" stroke="#d175ff" strokeWidth="2" d="M70 90 C40 90 30 130 50 160 C50 160 60 130 70 115 C80 100 120 100 130 115 C140 130 150 160 150 160 C170 130 160 90 130 90 Z" />
-                            <path fill="#1a0b2e" stroke="#8a2be2" strokeWidth="2" d="M80 115 L80 230 L60 280 L90 280 L100 230 L110 280 L140 280 L120 230 L120 115 Z" />
-                            <circle cx="100" cy="130" r="80" stroke="#d175ff" strokeWidth="4" fill="none" opacity="0.6"/>
-                            <circle cx="100" cy="130" r="70" stroke="#8a2be2" strokeWidth="2" fill="none" opacity="0.3"/>
-                        </svg>
+                        {/* UPDATE THIS SRC TO YOUR BACKGROUND PHOTO */}
+                        <img src="./your-pilot-photo.jpg" alt="Pilot Background" className="pilot-photo" />
 
-                        <div className="gear-slot slot-helmet" title="Helmet">
+                        <div className="gear-slot slot-helmet" onClick={() => openGearModal('helmet')} title="Select Helmet">
                             <i className="fa-solid fa-helmet-safety"></i>
-                            <span className="gear-label">Helmet</span>
+                            <span className="gear-label">{selectedGear.helmet.name}</span>
                         </div>
-                        <div className="gear-slot slot-wing" title="Wing">
+                        <div className="gear-slot slot-wing" onClick={() => openGearModal('wing')} title="Select Wing">
                             <i className="fa-solid fa-parachute-box"></i>
-                            <span className="gear-label">Dudek Driftair 2</span>
+                            <span className="gear-label">{selectedGear.wing.name}</span>
                         </div>
-                        <div className="gear-slot slot-reserve" title="Reserve Parachute">
+                        <div className="gear-slot slot-reserve" onClick={() => openGearModal('reserve')} title="Select Reserve">
                             <i className="fa-solid fa-life-ring"></i>
-                            <span className="gear-label">Reserve</span>
+                            <span className="gear-label">{selectedGear.reserve.name}</span>
                         </div>
-                        <div className="gear-slot slot-motor" title="Paramotor Engine">
+                        <div className="gear-slot slot-motor" onClick={() => openGearModal('motor')} title="Select Motor">
                             <i className="fa-solid fa-fan"></i>
-                            <span className="gear-label">Polini Thor 202 (WC)</span>
+                            <span className="gear-label">{selectedGear.motor.name}</span>
                         </div>
-                        <div className="gear-slot slot-instrument" title="Flight Instruments">
+                        <div className="gear-slot slot-instrument" onClick={() => openGearModal('instrument')} title="Select Instruments">
                             <i className="fa-solid fa-walkie-talkie"></i>
-                            <span className="gear-label">Comms/Nav</span>
+                            <span className="gear-label">{selectedGear.instrument.name}</span>
                         </div>
-                        <div className="gear-slot slot-boots" title="Footwear">
+                        <div className="gear-slot slot-boots" onClick={() => openGearModal('boots')} title="Select Footwear">
                             <i className="fa-solid fa-shoe-prints"></i>
-                            <span className="gear-label">Boots</span>
+                            <span className="gear-label">{selectedGear.boots.name}</span>
                         </div>
                     </div>
                 </div>
@@ -227,6 +283,31 @@ export default function App() {
                     )}
                 </div>
             </div>
+
+            {/* Gear Selection Modal */}
+            {isModalOpen && (
+                <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <span className="modal-title">Select {modalType}</span>
+                            <button className="close-btn" onClick={() => setIsModalOpen(false)}>
+                                <i className="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            {gearDatabase[modalType].map((item) => {
+                                const displayWeight = isKg ? item.weightKg : item.weightKg * 2.20462;
+                                return (
+                                    <div key={item.id} className="gear-option" onClick={() => selectGear(item)}>
+                                        <span className="gear-option-name">{item.name}</span>
+                                        <span className="gear-option-weight">{displayWeight.toFixed(1)} {weightUnit}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
