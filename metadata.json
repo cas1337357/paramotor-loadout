@@ -1,0 +1,6 @@
+{
+  "name": "Paramotor Loadout & Weight Visualizer",
+  "description": "Mobile-first offline PWA for paramotor (PPG) pilots. Gear inventory, weight & balance, wing loading visualizer, fuel endurance, and pre-flight checklists.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
